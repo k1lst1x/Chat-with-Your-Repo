@@ -102,7 +102,7 @@
               <b>You</b>
             </div>
             <div class="message-content">
-              {{chat.message}}
+              {{ chat.message }}
             </div>
           </div>
         </li>
@@ -113,7 +113,7 @@
               <b>AI Chatbot</b>
             </div>
             <div class="message-content">
-              {{chat.response}}
+              {{ chat.response|safe }}
             </div>
           </div>
         </li>
