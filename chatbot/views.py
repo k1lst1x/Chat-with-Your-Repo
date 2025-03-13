@@ -263,3 +263,6 @@ def chatbot(request):
         return JsonResponse({'message': message, 'response': response_text})
 
     return render(request, 'home.html', {'chats': chats})
+
+def index(request):
+    return render(request, 'index.html')

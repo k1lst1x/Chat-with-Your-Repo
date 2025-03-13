@@ -1,0 +1,208 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeAnalyst AI</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.css">
+</head>
+<body>
+
+    <nav class="nav">
+        <div class="container nav-container">
+            <div class="nav-logo">
+                <i class="lucide lucide-bot nav-logo-icon"></i>
+                <span class="nav-logo-text">CodeAnalyst AI</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#how-it-works" class="nav-link">How It Works</a>
+                <a href="#pricing" class="nav-link">Pricing</a>
+                <button class="btn btn-primary" onclick="location.href='{% url 'chatbot' %}'">Get Started</button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Analyze Code Repositories with AI Precision</h1>
+                <p>Leverage advanced RAG technology to understand, analyze, and improve your codebase like never before.</p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary btn-lg" onclick="location.href='{% url 'chatbot' %}'">Start Free Trial</button>
+    				<button class="btn btn-outline btn-lg" onclick="location.href='{% url 'chatbot' %}'">View Demo</button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">1M+</span>
+                        <span class="stat-label">Repositories Analyzed</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">50K+</span>
+                        <span class="stat-label">Active Users</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">99.9%</span>
+                        <span class="stat-label">Accuracy Rate</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="{% static 'images/hero-image.jpg' %}" alt="AI Code Analysis">
+            </div>
+        </div>
+    </header>
+
+    <section id="features" class="section section-gray">
+        <div class="container">
+            <div class="section-header">
+                <h2>Powerful Features</h2>
+                <p>Everything you need to understand and improve your code</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="lucide lucide-code-2"></i></div>
+                    <h3>Smart Code Analysis</h3>
+                    <p>Advanced AI algorithms analyze your code structure, patterns, and potential improvements.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="lucide lucide-search"></i></div>
+                    <h3>Semantic Search</h3>
+                    <p>Find similar code patterns and implementations across your entire codebase.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="lucide lucide-shield"></i></div>
+                    <h3>Security Scanning</h3>
+                    <p>Identify vulnerabilities and security risks before they become problems.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="lucide lucide-zap"></i></div>
+                    <h3>Performance Insights</h3>
+                    <p>Get actionable recommendations to optimize your code performance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2>How It Works</h2>
+                <p>Simple setup, powerful results</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Connect Repository</h3>
+                    <p>Link your GitHub, GitLab, or Bitbucket repository with a single click.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>AI Analysis</h3>
+                    <p>Our AI engine analyzes your codebase using advanced RAG technology.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Get Insights</h3>
+                    <p>Receive detailed reports and actionable recommendations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="section section-gray">
+        <div class="container">
+            <div class="section-header">
+                <h2>Simple Pricing</h2>
+                <p>Choose the plan that's right for you</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Starter</h3>
+                    <div class="price">$29<span>/month</span></div>
+                    <ul class="pricing-features">
+                        <li>Up to 5 repositories</li>
+                        <li>Basic code analysis</li>
+                        <li>Weekly reports</li>
+                        <li>Email support</li>
+                    </ul>
+                    <button class="btn btn-outline-primary btn-full">Get Started</button>
+                </div>
+                <div class="pricing-card pricing-card-popular">
+                    <div class="pricing-badge">Most Popular</div>
+                    <h3>Pro</h3>
+                    <div class="price">$99<span>/month</span></div>
+                    <ul class="pricing-features">
+                        <li>Up to 20 repositories</li>
+                        <li>Advanced code analysis</li>
+                        <li>Daily reports</li>
+                        <li>Priority support</li>
+                        <li>Custom integrations</li>
+                    </ul>
+                    <button class="btn btn-primary btn-full">Get Started</button>
+                </div>
+                <div class="pricing-card">
+                    <h3>Enterprise</h3>
+                    <div class="price">Custom</div>
+                    <ul class="pricing-features">
+                        <li>Unlimited repositories</li>
+                        <li>Custom AI models</li>
+                        <li>Real-time analysis</li>
+                        <li>24/7 dedicated support</li>
+                        <li>On-premise deployment</li>
+                    </ul>
+                    <button class="btn btn-outline-primary btn-full">Contact Sales</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <i class="lucide lucide-bot footer-logo-icon"></i>
+                        <span class="footer-logo-text">CodeAnalyst AI</span>
+                    </div>
+                    <p class="footer-description">
+                        Advanced code analysis powered by AI and RAG technology.
+                    </p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-links-group">
+                        <h4>Product</h4>
+                        <a href="#features">Features</a>
+                        <a href="#pricing">Pricing</a>
+                        <a href="#how-it-works">How It Works</a>
+                    </div>
+                    <div class="footer-links-group">
+                        <h4>Company</h4>
+                        <a href="#">About</a>
+                        <a href="#">Blog</a>
+                        <a href="#">Careers</a>
+                    </div>
+                    <div class="footer-links-group">
+                        <h4>Resources</h4>
+                        <a href="#">Documentation</a>
+                        <a href="#">API</a>
+                        <a href="#">Support</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 CodeAnalyst AI. All rights reserved.</p>
+                <div class="footer-social">
+                    <a href="#" class="social-link"><i class="lucide lucide-git-branch"></i></a>
+                    <a href="#" class="social-link"><i class="lucide lucide-bot"></i></a>
+                    <a href="#" class="social-link"><i class="lucide lucide-code-2"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

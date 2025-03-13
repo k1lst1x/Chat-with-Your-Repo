@@ -1,20 +1,30 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>Login</h1>
-    <hr>
+<div class="container d-flex justify-content-center align-items-center mt-5">
+    <div class="card shadow-lg rounded-4 p-4" style="max-width: 500px; background-color: #f8fafc;">
+        <h2 class="text-center mb-4" style="color: #1f2937;">Login</h2>
+        <hr style="border-top: 2px solid #e0e7ff;">
 
-    {% if form.errors %}
-        <p>{{ form.errors.error }}</p>
-    {% endif %}
+        {% if form.errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ form.errors }}
+            </div>
+        {% endif %}
 
-    <form action="{% url 'login' %}" method="post">
-        {% csrf_token %}
-        {{ form }}
-    <button type="submit" class="btn btn-success">submit</button>
-    </form>
+        <form action="{% url 'login' %}" method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="d-grid mt-3">
+                <button type="submit" class="btn btn-primary" style="background-color: #4f46e5; border-color: #4338ca;">Вход</button>
+            </div>
+        </form>
 
-    <a href="{% url 'password_reset' %}">Забыли пароль?</a>  
-    Нет аккаунта? <a href="{% url 'register' %}" style="color: #B60000; font-weight: bold;">Зарегестрироваться</a>
-
+        <div class="mt-3 text-center">
+            <a href="{% url 'password_reset' %}" style="color: #6b7280;">Забыли пароль?</a><br>
+            <span style="color: #4b5563;">Нет аккаунта?</span> 
+            <a href="{% url 'register' %}" style="color: #4338ca; font-weight: bold;">Зарегистрироваться</a>
+        </div>
+    </div>
+</div>
 {% endblock %}
