@@ -161,9 +161,10 @@
 
         const userMsg = document.createElement('li');
         userMsg.classList.add('message', 'sent');
-        userMsg.innerHTML = 
+        userMsg.innerHTML = `
             <div class="message-sender">You</div>
-            <div class="message-content">${message}</div>;
+            <div class="message-content">${message}</div>
+        `;
         messagesList.appendChild(userMsg);
         messageInput.value = '';
 
@@ -179,11 +180,13 @@
         .then(data => {
             const botMsg = document.createElement('li');
             botMsg.classList.add('message', 'received');
-            botMsg.innerHTML = 
+            botMsg.innerHTML = `
                 <div class="message-sender">AI Chatbot</div>
-                <div class="message-content">${data.response}</div>;
+                <div class="message-content">${data.response}</div>
+            `;
             messagesList.appendChild(botMsg);
         });
     });
 </script>
+
 {% endblock %}
