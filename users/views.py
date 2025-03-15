@@ -23,7 +23,7 @@ class Register(View):
             password = form.cleaned_data.get('password1')
             user = authenticate(email=email, password=password)
             login(request, user)
-            return redirect('home')
+            return redirect('chatbot')
         context = {
             'form': form
         }

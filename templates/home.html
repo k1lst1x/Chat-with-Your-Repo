@@ -116,12 +116,12 @@
         </div>
 
         <div class="messages-box">
-            {% if chats|length == 0 %}
-                <div class="empty-state">
-                    <p>No messages yet. Start chatting now!</p>
-                </div>
-            {% else %}
-                <ul class="messages-list">
+            <ul class="messages-list">
+                {% if chats|length == 0 %}
+                    <div class="empty-state">
+                        <p>No messages yet. Start chatting now!</p>
+                    </div>
+                {% else %}
                     {% for chat in chats %}
                         {% if chat.user == request.user %}
                             <li class="message sent">
@@ -134,9 +134,9 @@
                             </li>
                         {% endif %}
                     {% endfor %}
-                </ul>
-            {% endif %}
-        </div>
+                {% endif %}
+            </ul>
+        </div>        
 
         <form class="message-form" method="post">
             {% csrf_token %}
@@ -187,6 +187,24 @@
             messagesList.appendChild(botMsg);
         });
     });
+
+    function checkPaymentStatus() {
+     fetch('/payments/check_payment/', {
+       method: 'GET',
+       headers: { 'Content-Type': 'application/json' }
+     })
+     .then(response => response.json())
+     .then(data => {
+       if (data.message === "Подписка активирована!") {
+         alert("Оплата подтверждена! Теперь вы можете пользоваться ботом.");
+         location.reload();  // Перезагружаем страницу, чтобы обновился статус
+       }
+     })
+     .catch(error => console.error("Ошибка при проверке платежа:", error));
+   }
+ 
+   // Запускаем проверку каждые 10 секунд
+   setInterval(checkPaymentStatus, 10000);
 </script>
 
 {% endblock %}
