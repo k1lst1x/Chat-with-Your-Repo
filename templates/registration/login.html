@@ -1,16 +1,29 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+    .errorlist {
+        list-style: none; /* убрать маркеры списка */
+        padding: 10px 15px;
+        margin-bottom: 1rem;
+        background-color: #f8d7da; /* Bootstrap alert-danger background */
+        border: 1px solid #f5c2c7;
+        color: #842029;
+        border-radius: 0.375rem;
+    }
+</style>
 <div class="container d-flex justify-content-center align-items-center mt-5">
     <div class="card shadow-lg rounded-4 p-4" style="max-width: 500px; background-color: #f8fafc;">
         <h2 class="text-center mb-4" style="color: #1f2937;">Login</h2>
         <hr style="border-top: 2px solid #e0e7ff;">
 
-        {% if form.errors %}
+        <!-- {% if form.non_field_errors %}
             <div class="alert alert-danger" role="alert">
-                {{ form.errors }}
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
             </div>
-        {% endif %}
+        {% endif %} -->
 
         <form action="{% url 'login' %}" method="post">
             {% csrf_token %}

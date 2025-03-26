@@ -273,56 +273,63 @@ def analyze_and_ask_openai(repo_path):
     # return f"{summary_text}\n\n💡 OpenAI анализ:\n{openai_response}"
     return f"💡Анализ репозитория:\n{openai_response}"
 
+from datetime import date
+from django.db.models import Count
+
 @login_required
 def chatbot(request):
     user = request.user
-
     chats = Chat.objects.filter(user=user)
 
     if request.method == 'POST':
         message = request.POST.get('message')
-        # Если нет подписки — отправляем ссылку на оплату
-        if not user.is_subscribed:
-            from payments.models import Payment  # Импортируем модель платежей
-            from payments.views import get_payment_link  # Импортируем генерацию ссылки
 
-            # Проверяем, есть ли неоплаченный заказ
-            last_payment = Payment.objects.filter(user=user, status="UNPAID").last()
-            if last_payment:
-                payment_url = f"https://stage-checkout.ioka.kz/orders/{last_payment.ioka_order_id}"
-            else:
-                # Если заказа нет, создаем новый
-                response = get_payment_link(request)
-                payment_url = json.loads(response.content.decode("utf-8")).get("url")
-
-            return JsonResponse({
-                'message': message,
-                'response': f'У вас нет активной подписки. Оплатите её по ссылке: <a href="{payment_url}" target="_blank">Оплатить</a>'
-            })
-
+        # 🔒 Временно отключаем проверку на подписку
+        # if not user.is_subscribed:
+        #     from payments.models import Payment
+        #     from payments.views import get_payment_link
+        #     last_payment = Payment.objects.filter(user=user, status="UNPAID").last()
+        #     if last_payment:
+        #         payment_url = f"https://stage-checkout.ioka.kz/orders/{last_payment.ioka_order_id}"
+        #     else:
+        #         response = get_payment_link(request)
+        #         payment_url = json.loads(response.content.decode("utf-8")).get("url")
+        #     return JsonResponse({
+        #         'message': message,
+        #         'response': f'У вас нет активной подписки. Оплатите её по ссылке: <a href="{payment_url}" target="_blank">Оплатить</a>'
+        #     })
 
         if not message:
             return JsonResponse({'error': 'Message cannot be empty'}, status=400)
 
-        # Проверяем, содержит ли сообщение ссылку на GitHub
+        # 📊 Лимит 10 запросов в день
+        today = date.today()
+        daily_count = Chat.objects.filter(user=user, created_at__date=today).count()
+        if daily_count >= 10:
+            response_text = (
+                '🛑 Вы достигли лимита в 10 запросов на сегодня. '
+                'Подождите до завтра или оформите подписку для безлимитного доступа.'
+            )
+            return JsonResponse({'message': message, 'response': response_text})
+
+        # 🧠 Обработка GitHub ссылки или обычного запроса
         github_link = re.search(r"https?://github\.com/[^\s]+", message)
         if github_link:
             repo_path, error = download_github_repo(github_link.group(0))
             if error:
-                return JsonResponse({'error': error}, status=400)
-
-            # response_text = f"Repository downloaded and extracted to: {repo_path}"
+                return JsonResponse({'message': message, 'response': f"Ошибка: {error}"})
             response_text = analyze_and_ask_openai(repo_path)
         else:
             response_text = ask_openai(message, user_id=user.id)
 
-        # 🔹 **Форматируем ответ в Markdown/HTML**
+        # 🔹 Форматирование Markdown → HTML
         response_text = markdown.markdown(
             response_text,
             extensions=['fenced_code', 'tables', 'nl2br', 'extra'],
-            output_format="html5"  # Добавь эту строку
+            output_format="html5"
         )
 
+        # 💬 Сохраняем сообщение
         chat = Chat.objects.create(
             user=user, message=message, response=response_text, created_at=timezone.now()
         )
