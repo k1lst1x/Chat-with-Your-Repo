@@ -15,21 +15,88 @@ from django.utils.html import escape
 from django.utils.safestring import mark_safe
 import markdown
 
-def ask_openai(message):
-    response = g4f.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {
-                "role": "system",
-                "content": "Your task is to analyze a GitHub repository in great detail. "
-                           "Provide insights on the programming language used, frameworks, libraries, "
-                           "key functions, and any other relevant information about the repository. "
-                           "Offer a structured and detailed breakdown."
-            },
-            {"role": "user", "content": message},
-        ]
+from dotenv import load_dotenv
+
+load_dotenv()
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
+
+# def ask_openai(message):
+#     response = g4f.ChatCompletion.create(
+#         model="gpt-4",
+#         messages=[
+#             {
+#                 "role": "system",
+#                 "content": "Your task is to analyze a GitHub repository in great detail. "
+#                            "Provide insights on the programming language used, frameworks, libraries, "
+#                            "key functions, and any other relevant information about the repository. "
+#                            "Offer a structured and detailed breakdown."
+#             },
+#             {"role": "user", "content": message},
+#         ]
+#     )
+#     return response  # g4f уже возвращает строку
+
+# def ask_openai(message):
+#     response = client.chat.completions.create(
+#         model="gpt-4o-mini",
+#         messages=[
+#             {
+#                 "role": "system",
+#                 "content": "Your task is to analyze a GitHub repository in great detail. "
+#                            "Provide insights on the programming language used, frameworks, libraries, "
+#                            "key functions, and any other relevant information about the repository. "
+#                            "Offer a structured and detailed breakdown."
+#             },
+#             {"role": "user", "content": message}
+#         ]
+#     )
+#     return response.choices[0].message.content
+
+# from g4f import ChatCompletion  # ❌
+from openai import OpenAI
+from django.core.cache import cache  # Для хранения thread_id
+
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+def ask_openai(message, user_id="default"):
+    # Используем Redis/Django cache, чтобы хранить тред для каждого пользователя
+    thread_key = f"openai_thread_{user_id}"
+    thread_id = cache.get(thread_key)
+
+    if not thread_id:
+        thread = client.beta.threads.create()
+        thread_id = thread.id
+        cache.set(thread_key, thread_id, timeout=None)
+
+    # Добавляем сообщение
+    client.beta.threads.messages.create(
+        thread_id=thread_id,
+        role="user",
+        content=message
     )
-    return response  # g4f уже возвращает строку
+
+    # Запускаем ран
+    run = client.beta.threads.runs.create(
+        thread_id=thread_id,
+        assistant_id=OPENAI_ASSISTANT_ID
+    )
+
+    # Ждем завершения run
+    import time
+    while True:
+        run_status = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run.id)
+        if run_status.status == "completed":
+            break
+        elif run_status.status in ["failed", "cancelled"]:
+            return "❌ Ошибка: Запрос не удалось обработать."
+        time.sleep(1)
+
+    # Получаем ответ
+    messages = client.beta.threads.messages.list(thread_id=thread_id)
+    last_message = messages.data[0].content[0].text.value
+    return last_message
 
 def get_default_branch(owner, repo):
     """Получает основную ветку репозитория."""
@@ -201,7 +268,7 @@ def analyze_and_ask_openai(repo_path):
         "\n".join(key_files_content)
     )
 
-    openai_response = ask_openai(openai_prompt)
+    openai_response = ask_openai(openai_prompt, user_id="analyzer")
 
     # return f"{summary_text}\n\n💡 OpenAI анализ:\n{openai_response}"
     return f"💡Анализ репозитория:\n{openai_response}"
@@ -247,7 +314,7 @@ def chatbot(request):
             # response_text = f"Repository downloaded and extracted to: {repo_path}"
             response_text = analyze_and_ask_openai(repo_path)
         else:
-            response_text = ask_openai(message)
+            response_text = ask_openai(message, user_id=user.id)
 
         # 🔹 **Форматируем ответ в Markdown/HTML**
         response_text = markdown.markdown(
