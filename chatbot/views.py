@@ -14,6 +14,12 @@ import g4f
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 import markdown
+from langchain_community.vectorstores import Chroma
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import TextLoader
+from langchain_core.documents import Document
+import shutil
 
 from dotenv import load_dotenv
 
@@ -21,6 +27,48 @@ load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
+
+CHROMA_DB_DIR = os.path.join(settings.BASE_DIR, "chroma_db")
+
+def index_repository_for_rag(repo_path, repo_name, user_id):
+    documents = []
+    for root, _, files in os.walk(repo_path):
+        for filename in files:
+            if filename.endswith(('.py', '.js', '.ts', '.java', '.cpp', '.c', '.go', '.rb', '.php', '.html', '.css')):
+                file_path = os.path.join(root, filename)
+                try:
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read()
+                    rel_path = os.path.relpath(file_path, repo_path)
+                    doc = Document(
+                        page_content=content,
+                        metadata={
+                            "file_path": rel_path,
+                            "repo_name": repo_name,
+                            "user_id": str(user_id)
+                        }
+                    )
+                    documents.append(doc)
+                except Exception:
+                    continue
+
+    if not documents:
+        return
+
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    docs = splitter.split_documents(documents)
+
+    vectorstore_path = os.path.join(CHROMA_DB_DIR, f"{user_id}_{repo_name}")
+    if os.path.exists(vectorstore_path):
+        shutil.rmtree(vectorstore_path)
+
+    db = Chroma.from_documents(
+        documents=docs,
+        embedding=OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY),
+        persist_directory=vectorstore_path
+    )
+    db.persist()
+
 
 # def ask_openai(message):
 #     response = g4f.ChatCompletion.create(
@@ -244,8 +292,29 @@ def summarize_repository(repo_analysis):
 
     return "\n".join(summary)
 
+def query_repository(question, repo_name, user_id):
+    vectorstore_path = os.path.join(CHROMA_DB_DIR, f"{user_id}_{repo_name}")
+    if not os.path.exists(vectorstore_path):
+        return "❌ Репозиторий не найден. Сначала проанализируйте его."
 
-def analyze_and_ask_openai(repo_path):
+    db = Chroma(
+        persist_directory=vectorstore_path,
+        embedding_function=OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+    )
+
+    relevant_docs = db.similarity_search(question, k=10)
+    context = "\n\n".join([doc.page_content[:1000] for doc in relevant_docs])
+    print(context)
+
+    prompt = (
+        f"Ты помощник, анализирующий код. Ответь на вопрос пользователя, используя этот контекст:\n\n{context}\n\n"
+        f"Вопрос: {question}"
+    )
+
+    return ask_openai(prompt, user_id=user_id)
+
+
+def analyze_and_ask_openai(repo_path, user_id):
     """Анализирует репозиторий и отправляет данные в GPT."""
     repo_analysis = analyze_repository(repo_path)  # Локальный анализ
     summary_text = summarize_repository(repo_analysis)  # Генерация отчета
@@ -260,6 +329,7 @@ def analyze_and_ask_openai(repo_path):
                     key_files_content.append(f"📂 {file_path}\n```{file_content[:2000]}```\n")
             except Exception:
                 continue  # Пропускаем файлы, которые не удалось прочитать
+    index_repository_for_rag(repo_path, os.path.basename(repo_path), user_id=user_id)
 
     openai_prompt = (
         "Ты — эксперт по анализу кода. Дай детальное объяснение структуры проекта:\n\n"
@@ -305,7 +375,7 @@ def chatbot(request):
         # 📊 Лимит 10 запросов в день
         today = date.today()
         daily_count = Chat.objects.filter(user=user, created_at__date=today).count()
-        if daily_count >= 10:
+        if daily_count >= 1000:
             response_text = (
                 '🛑 Вы достигли лимита в 10 запросов на сегодня. '
                 'Подождите до завтра или оформите подписку для безлимитного доступа.'
@@ -318,7 +388,15 @@ def chatbot(request):
             repo_path, error = download_github_repo(github_link.group(0))
             if error:
                 return JsonResponse({'message': message, 'response': f"Ошибка: {error}"})
-            response_text = analyze_and_ask_openai(repo_path)
+            response_text = analyze_and_ask_openai(repo_path, user_id=user.id)
+        if message.lower().startswith("вопрос по репо:"):
+            parts = message.split(":", 2)
+            if len(parts) == 3:
+                repo_name = parts[1].strip()
+                question = parts[2].strip()
+                response_text = query_repository(question, repo_name, user.id)
+            else:
+                response_text = "⚠️ Формат должен быть: 'Вопрос по репо: repo_name: ваш вопрос'"
         else:
             response_text = ask_openai(message, user_id=user.id)
 

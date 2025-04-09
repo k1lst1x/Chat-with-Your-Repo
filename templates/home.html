@@ -148,6 +148,79 @@
     </div>
 </div>
 
+<script>
+    const messagesList = document.querySelector('.messages-list');
+    const messageForm = document.querySelector('.message-form');
+    const messageInput = document.querySelector('.message-input');
+
+    function scrollChatToBottom() {
+        const messagesBox = document.querySelector('.messages-box');
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+    }
+
+    messageForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        const userMsg = document.createElement('li');
+        userMsg.classList.add('message', 'sent');
+        userMsg.innerHTML = `
+            <div class="message-sender">You</div>
+            <div class="message-content">${message}</div>
+        `;
+        messagesList.appendChild(userMsg);
+        scrollChatToBottom();
+
+        messageInput.value = '';
+
+        // Добавляем сообщение "AI печатает..."
+        const typingMsg = document.createElement('li');
+        typingMsg.classList.add('message', 'received');
+        typingMsg.setAttribute('id', 'typing-msg');
+        typingMsg.innerHTML = `
+            <div class="message-sender">AI Chatbot</div>
+            <div class="message-content"><em>Chatbot is typing...</em></div>
+        `;
+        messagesList.appendChild(typingMsg);
+        scrollChatToBottom();
+
+        fetch('', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'message': message
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            // Удаляем сообщение "печатает..."
+            typingMsg.remove();
+
+            const botMsg = document.createElement('li');
+            botMsg.classList.add('message', 'received');
+            botMsg.innerHTML = `
+                <div class="message-sender">AI Chatbot</div>
+                <div class="message-content">${data.response}</div>
+            `;
+            messagesList.appendChild(botMsg);
+            scrollChatToBottom();
+        });
+    });
+
+    // Если хотите автопрокрутку при загрузке страницы
+    window.addEventListener('load', scrollChatToBottom);
+</script>
+
+<style>
+    .message-content em {
+        color: var(--gray);
+        font-style: italic;
+    }
+</style>
+
 <!-- <script>
     const messagesList = document.querySelector('.messages-list');
     const messageForm = document.querySelector('.message-form');

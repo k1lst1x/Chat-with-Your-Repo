@@ -4,3 +4,9 @@ psycopg2-binary==2.9.9
 Markdown==3.7
 openai==1.68.2
 python-dotenv==1.1.0
+chromadb==0.4.14
+langchain
+langchain-community
+langchain-text-splitters
+tiktoken
+langchain-chroma
