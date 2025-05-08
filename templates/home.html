@@ -124,6 +124,30 @@
         padding: 0.25rem 0.5rem;
         border-radius: 0.375rem;
     }
+    .btn-voice.recording {
+        background-color: var(--red-500);
+        color: #fff;
+    }
+    /* ——— стилистика бейджей в карточке шагов ——— */
+    .chat-intro .badge {
+        width: 36px;
+        height: 36px;
+        line-height: 24px;
+        font-size: 1rem;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* делаем фон шапки чуть полупрозрачным на маленьких экранах, 
+    чтобы текст читался на контрасте с градиентом */
+    @media (max-width: 991.98px) {
+        .chat-intro .card {
+            backdrop-filter: blur(4px);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+    }
 </style>
 {% endblock %}
 
@@ -132,8 +156,48 @@
     <div class="chat-box">
         <!-- ░░░ ШАПКА ░░░ -->
         <div class="chat-intro">
-            <h5><i class="bi bi-stars me-2"></i> Добро пожаловать в CodeAnalyst AI</h5>
-            <p>Задайте любой технический вопрос — и нейросеть поможет!</p>
+            <div class="container px-0 px-md-3">
+            <div class="row align-items-center gy-3">
+                <!-- Лого + слоган -->
+                <div class="col-lg-4 text-lg-start text-center">
+                <h5 class="fw-bold mb-1">
+                    <i class="bi bi-stars me-2"></i> CodeAnalyst AI
+                </h5>
+                <p class="mb-0 small">
+                    Интеллектуальный разбор GitHub‑репозиториев <br class="d-none d-lg-block">
+                    и ответы на ваши технические вопросы
+                </p>
+                </div>
+        
+                <!-- Шаги использования -->
+                <div class="col-lg-8">
+                <div class="card bg-white bg-opacity-10 border-0 shadow-sm">
+                    <div class="card-body py-3 px-4">
+                    <div class="d-flex align-items-start mb-2">
+                        <span class="badge bg-light text-dark me-3 fw-semibold">1</span>
+                        <span class="text-white"><i class="bi bi-link-45deg me-1"></i>Вставьте ссылку на публичный репозиторий GitHub.</span>
+                    </div>
+                    <div class="d-flex align-items-start mb-2">
+                        <span class="badge bg-light text-dark me-3 fw-semibold">2</span>
+                        <span class="text-white"><i class="bi bi-download me-1"></i>Мы скачаем&nbsp;код, построим векторную базу и пришлём <em>«💡Анализ репозитория…»</em>.</span>
+                    </div>
+                    <div class="d-flex align-items-start mb-2">
+                        <span class="badge bg-light text-dark me-3 fw-semibold">3</span>
+                        <span class="text-white">
+                        Спросите: 
+                        <code>Вопрос&nbsp;по&nbsp;репо: <kbd>имя_репо</kbd>: ваш вопрос</code> —
+                        бот найдёт нужные файлы и ответит.
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-start">
+                        <span class="badge bg-light text-dark me-3 fw-semibold">4</span>
+                        <span class="text-white"><i class="bi bi-lightning-charge-fill me-1"></i>Для любых других задач просто напишите сообщение&nbsp;— CodeAnalyst поможет.</span>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            </div>
         </div>
 
         <!-- ░░░ Лента сообщений ░░░ -->
@@ -173,11 +237,22 @@
         <form class="message-form" method="post">
             {% csrf_token %}
             <div class="input-group shadow-sm">
-                <input type="text" name="message" class="form-control message-input" placeholder="Введите сообщение…" aria-label="Текст сообщения" required>
+                <!-- Кнопка микрофона -->
+                <button type="button"
+                        class="btn btn-outline-secondary btn-voice"
+                        aria-label="Голосовой ввод">
+                    <i class="bi bi-mic"></i>
+                </button>
+            
+                <input type="text" name="message"
+                       class="form-control message-input"
+                       placeholder="Скажите что‑нибудь…"
+                       aria-label="Текст сообщения" required>
+            
                 <button type="submit" class="btn btn-primary btn-send" aria-label="Отправить">
                     <i class="bi bi-send-fill"></i>
                 </button>
-            </div>
+            </div>            
         </form>
     </div>
 </div>
@@ -319,15 +394,85 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /* опции вывода — можете править под себя */
         const opt = {
-            margin:       [5, 10, 5, 10],           // [top, right, bottom, left] мм
-            filename:     'JangyrAI-response.pdf',
+            margin:       [5, 5, 5, 5],
+            filename:     'CodeAnalystAI-response.pdf',
             image:        { type: 'jpeg', quality: 0.96 },
-            html2canvas:  { scale: 1.7, useCORS: true },
+            html2canvas:  {
+                scale: 1.7,
+                useCORS: true,
+                //   ⬇⬇⬇  прячем саму кнопку и её вложения
+                ignoreElements: el => el.classList?.contains('download-pdf')
+            },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
         };
 
         html2pdf().set(opt).from(el).save();
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    /* ===== 0. Проверяем поддержку API ===== */
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const voiceBtn         = document.querySelector('.btn-voice');
+    const input            = document.querySelector('.message-input');
+
+    if (!SpeechRecognition) {
+        voiceBtn.style.display = 'none';     // скрываем, если не поддерживается
+        return;
+    }
+
+    /* ===== 1. Настраиваем Recognition ===== */
+    const recog = new SpeechRecognition();
+    recog.lang            = 'ru-RU';   // язык распознавания
+    recog.interimResults  = true;      // показывать «черновики»
+    recog.maxAlternatives = 1;
+
+    let listening = false;
+
+    /* ===== 2. Клик по кнопке — старт / стоп ===== */
+    voiceBtn.addEventListener('click', () => {
+        if (listening) {
+            recog.stop();
+            return;
+        }
+        try {
+            recog.start();
+        } catch { /* Safari кидает ошибку, если вызвать слишком быстро */ }
+    });
+
+    /* ===== 3. Обработка событий ===== */
+    recog.addEventListener('start', () => {
+        listening = true;
+        voiceBtn.classList.add('recording');
+        voiceBtn.querySelector('i').className = 'bi bi-mic-fill';
+    });
+
+    recog.addEventListener('result', (e) => {
+        // последний распознанный вариант
+        const transcript = Array.from(e.results)
+              .map(r => r[0].transcript)
+              .join('');
+        input.value = transcript;
+
+        // если фраза закончена — можно сразу отправить форму
+        if (e.results[e.results.length - 1].isFinal) {
+            // messageForm.requestSubmit();   // раскомментируйте, если авто‑отправка нужна
+        }
+    });
+
+    recog.addEventListener('end', () => {
+        listening = false;
+        voiceBtn.classList.remove('recording');
+        voiceBtn.querySelector('i').className = 'bi bi-mic';
+    });
+
+    recog.addEventListener('error', (e) => {
+        console.warn('SpeechRecognition error:', e.error);
+        recog.stop();
     });
 });
 </script>

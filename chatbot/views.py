@@ -32,6 +32,20 @@ CHROMA_DB_DIR = os.path.join(settings.BASE_DIR, "chroma_db")
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
+import gc, time, shutil, errno
+
+def safe_rmtree(path, retries: int = 3, delay: float = 0.3):
+    """Удаляет каталог, подождав пока ОС освободит файлы."""
+    for _ in range(retries):
+        try:
+            shutil.rmtree(path)
+            return
+        except PermissionError as e:
+            # ждём, даём GC закрыть дескрипторы и пробуем ещё раз
+            gc.collect()
+            time.sleep(delay)
+    raise  # если не получилось – пусть паднёт как раньше
+
 def index_repository_for_rag(repo_path, repo_name, user_id):
     documents = []
     for root, _, files in os.walk(repo_path):
@@ -62,7 +76,7 @@ def index_repository_for_rag(repo_path, repo_name, user_id):
 
     vectorstore_path = os.path.join(CHROMA_DB_DIR, f"{user_id}_{repo_name}")
     if os.path.exists(vectorstore_path):
-        shutil.rmtree(vectorstore_path)
+        safe_rmtree(vectorstore_path)
 
     db = Chroma.from_documents(
         documents=docs,
