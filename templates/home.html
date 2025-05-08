@@ -2,12 +2,14 @@
 
 {% block styles %}
 <style>
+    /* Обёртка всего чата */
     .chat-wrapper {
         height: 85vh;
         display: flex;
         flex-direction: column;
     }
 
+    /* Основной контейнер с закруглениями и тенью */
     .chat-box {
         background-color: var(--card-bg);
         border-radius: 1rem;
@@ -18,6 +20,7 @@
         flex-grow: 1;
     }
 
+    /* Шапка‑приветствие */
     .chat-intro {
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
         color: var(--white);
@@ -26,26 +29,24 @@
         border-top-right-radius: 1.5rem;
         text-align: center;
     }
-
     .chat-intro h5 {
         font-size: 1.5rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
     }
-
     .chat-intro p {
         font-size: 1rem;
         color: #e0e7ff;
         margin: 0;
     }
 
+    /* Сама лента сообщений */
     .messages-box {
         padding: 1rem;
         overflow-y: auto;
         flex-grow: 1;
         background-color: var(--light-bg-2);
     }
-
     .messages-list {
         list-style: none;
         padding: 0;
@@ -54,36 +55,39 @@
         flex-direction: column;
         gap: 1rem;
     }
-
     .message {
         max-width: 75%;
         padding: 0.75rem 1rem;
         border-radius: 1rem;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
-
     .sent {
         align-self: flex-end;
         background-color: var(--primary);
         color: var(--white);
     }
-
     .received {
         align-self: flex-start;
         background-color: var(--white);
         color: var(--text-dark);
         border: 1px solid var(--gray-light);
     }
-
+    .system {
+        align-self: center;
+        background-color: var(--yellow-100);
+        color: var(--yellow-900);
+        font-size: .875rem;
+        padding: .5rem .75rem;
+    }
     .message-sender {
         font-weight: 600;
         margin-bottom: 0.25rem;
     }
-
     .message-content {
         word-wrap: break-word;
     }
 
+    /* Форма отправки */
     .message-form {
         background-color: var(--white);
         padding: 1rem;
@@ -93,16 +97,32 @@
     .message-input {
         border-radius: 0.5rem 0 0 0.5rem;
     }
-
     .btn-send {
         border-radius: 0 0.5rem 0.5rem 0;
     }
 
+    /* Пустое состояние */
     .empty-state {
         text-align: center;
         color: var(--gray-light);
         font-style: italic;
         padding: 2rem;
+    }
+    .empty-state i {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: .5rem;
+    }
+
+    /* Служебное сообщение "…печатает" */
+    .message-content em {
+        color: var(--gray);
+        font-style: italic;
+    }
+    .download-pdf {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
     }
 </style>
 {% endblock %}
@@ -110,116 +130,207 @@
 {% block content %}
 <div class="container chat-wrapper mb-4">
     <div class="chat-box">
+        <!-- ░░░ ШАПКА ░░░ -->
         <div class="chat-intro">
-            <h5><i class="icon lucide-sparkles me-1"></i> Welcome to CodeAnalyst AI</h5>
-            <p>Ask any technical question — and let the neural assistant help you!</p>
+            <h5><i class="bi bi-stars me-2"></i> Добро пожаловать в CodeAnalyst AI</h5>
+            <p>Задайте любой технический вопрос — и нейросеть поможет!</p>
         </div>
 
+        <!-- ░░░ Лента сообщений ░░░ -->
         <div class="messages-box">
             <ul class="messages-list">
                 {% if chats|length == 0 %}
-                    <div class="empty-state">
-                        <p>No messages yet. Start chatting now!</p>
-                    </div>
+                    <li class="empty-state">
+                        <i class="bi bi-chat-dots"></i>
+                        Сообщений пока нет. Начните диалог!
+                    </li>
                 {% else %}
                     {% for chat in chats %}
                         {% if chat.user == request.user %}
                             <li class="message sent">
-                                <div class="message-sender">You</div>
+                                <div class="message-sender">Вы</div>
                                 <div class="message-content">{{ chat.message }}</div>
                             </li>
                             <li class="message received">
-                                <div class="message-sender">AI Chatbot</div>
-                                <div class="message-content">{{ chat.response|safe }}</div>
-                            </li>
+                                <div class="message-sender">AI‑Чатбот</div>
+                            
+                                {# уникальный id, например msg‑<primary key> #}
+                                <div id="msg-{{ chat.id }}" class="message-content">
+                                    {{ chat.response|safe }}
+                                    <button class="btn btn-outline-danger btn-sm ms-2 download-pdf"
+                                            data-id="msg-{{ chat.id }}">
+                                        <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+                                    </button>
+                                </div>
+                            </li>                            
                         {% endif %}
                     {% endfor %}
                 {% endif %}
             </ul>
-        </div>        
+        </div>
 
+        <!-- ░░░ Форма отправки ░░░ -->
         <form class="message-form" method="post">
             {% csrf_token %}
-            <div class="input-group">
-                <input type="text" name="message" class="form-control message-input" placeholder="Type your message..." required>
-                <button type="submit" class="btn btn-primary btn-send">Send</button>
+            <div class="input-group shadow-sm">
+                <input type="text" name="message" class="form-control message-input" placeholder="Введите сообщение…" aria-label="Текст сообщения" required>
+                <button type="submit" class="btn btn-primary btn-send" aria-label="Отправить">
+                    <i class="bi bi-send-fill"></i>
+                </button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    const messagesList = document.querySelector('.messages-list');
-    const messageForm = document.querySelector('.message-form');
-    const messageInput = document.querySelector('.message-input');
+    /*──────────────────────────────────────────────────────────────────────*
+     * 1. УТИЛИТА: создание Issue через GitHub API                         *
+     *──────────────────────────────────────────────────────────────────────*/
+    async function createIssue(repoUrl, bodyMarkdown) {
+        const TOKEN = "{{ github_token|escapejs }}";
 
-    function scrollChatToBottom() {
-        const messagesBox = document.querySelector('.messages-box');
-        messagesBox.scrollTop = messagesBox.scrollHeight;
+        const m = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+        if (!m) throw new Error("Неверный URL GitHub");
+
+        const [owner, repo] = m.slice(1, 3);
+        const api = `https://api.github.com/repos/${owner}/${repo}/issues`;
+
+        const payload = {
+            title: `Авто‑анализ (${new Date().toISOString().slice(0, 10)})`,
+            body: bodyMarkdown.slice(0, 65000)  // лимит GitHub ≈ 65 KB
+        };
+
+        const res = await fetch(api, {
+            method: "POST",
+            headers: {
+                "Authorization": `token ${TOKEN}`,
+                "Accept": "application/vnd.github+json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const errTxt = await res.text();
+            throw new Error(`GitHub API ${res.status}: ${errTxt}`);
+        }
+        return (await res.json()).html_url;
     }
 
-    messageForm.addEventListener('submit', (event) => {
-        event.preventDefault();
+    /*──────────────────────────────────────────────────────────────────────*
+     * 2. ЛОГИКА чата                                                      *
+     *──────────────────────────────────────────────────────────────────────*/
+    const messagesList = document.querySelector('.messages-list');
+    const messageForm  = document.querySelector('.message-form');
+    const messageInput = document.querySelector('.message-input');
 
-        const message = messageInput.value.trim();
-        if (!message) return;
+    function scrollChat() {
+        const box = document.querySelector('.messages-box');
+        box.scrollTop = box.scrollHeight;
+    }
 
-        const userMsg = document.createElement('li');
-        userMsg.classList.add('message', 'sent');
-        userMsg.innerHTML = `
-            <div class="message-sender">You</div>
-            <div class="message-content">${message}</div>
-        `;
-        messagesList.appendChild(userMsg);
-        scrollChatToBottom();
+    messageForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = messageInput.value.trim();
+        if (!text) return;
 
+        /* Добавляем отправленное сообщение */
+        messagesList.insertAdjacentHTML('beforeend', `
+            <li class="message sent">
+                <div class="message-sender">Вы</div>
+                <div class="message-content">${text}</div>
+            </li>`);
+        scrollChat();
         messageInput.value = '';
 
-        // Добавляем сообщение "AI печатает..."
-        const typingMsg = document.createElement('li');
-        typingMsg.classList.add('message', 'received');
-        typingMsg.setAttribute('id', 'typing-msg');
-        typingMsg.innerHTML = `
-            <div class="message-sender">AI Chatbot</div>
-            <div class="message-content"><em>Chatbot is typing...</em></div>
-        `;
-        messagesList.appendChild(typingMsg);
-        scrollChatToBottom();
+        /* «Чатбот печатает…» */
+        const typing = document.createElement('li');
+        typing.className = 'message received';
+        typing.innerHTML = `
+            <div class="message-sender">AI‑Чатбот</div>
+            <div class="message-content"><em>Чатбот печатает…</em></div>`;
+        typing.id = 'typing-msg';
+        messagesList.appendChild(typing);
+        scrollChat();
 
-        fetch('', {
+        /* Запрос к Django backend */
+        const data = await fetch('', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
-                'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'message': message
+                csrfmiddlewaretoken: document.querySelector('[name=csrfmiddlewaretoken]').value,
+                message: text
             })
-        })
-        .then(res => res.json())
-        .then(data => {
-            // Удаляем сообщение "печатает..."
-            typingMsg.remove();
+        }).then(r => r.json()).catch(err => ({ response: `<em>${err}</em>` }));
 
-            const botMsg = document.createElement('li');
-            botMsg.classList.add('message', 'received');
-            botMsg.innerHTML = `
-                <div class="message-sender">AI Chatbot</div>
-                <div class="message-content">${data.response}</div>
-            `;
-            messagesList.appendChild(botMsg);
-            scrollChatToBottom();
-        });
+        /* Удаляем «печатает…» и выводим ответ */
+        typing.remove();
+        const uid = `msg-${Date.now()}`;          // примитивный уникальный id
+
+        messagesList.insertAdjacentHTML('beforeend', `
+            <li class="message received">
+                <div class="message-sender">AI‑Чатбот</div>
+                <div id="${uid}" class="message-content">
+                    ${data.response}
+                    <button class="btn btn-outline-danger btn-sm ms-2 download-pdf"
+                            data-id="${uid}">
+                        <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+                    </button>
+                </div>
+            </li>`);
+        scrollChat();
+
+        /*──────────────────────────────────────────────────────────────*
+          3.  Если в тексте найдена GitHub‑ссылка — создаём Issue
+         *──────────────────────────────────────────────────────────────*/
+        const ghMatch = text.match(/https:\/\/github\.com\/\S+/);
+        if (ghMatch) {
+            try {
+                /* Быстро убираем HTML‑теги для тела Issue */
+                const stripTags = html => html.replace(/<[^>]*>/g, '');
+                const issueUrl  = await createIssue(ghMatch[0], stripTags(data.response));
+
+                messagesList.insertAdjacentHTML('beforeend', `
+                    <li class="message system">
+                        📌 Issue создан: <a href="${issueUrl}" target="_blank">посмотреть на GitHub</a>
+                    </li>`);
+            } catch (err) {
+                messagesList.insertAdjacentHTML('beforeend', `
+                    <li class="message system">⚠️ Не удалось создать Issue: ${err.message}</li>`);
+            }
+            scrollChat();
+        }
     });
 
-    // Если хотите автопрокрутку при загрузке страницы
-    window.addEventListener('load', scrollChatToBottom);
-</script>
+    window.addEventListener('load', scrollChat);
+</script>    
 
-<style>
-    .message-content em {
-        color: var(--gray);
-        font-style: italic;
-    }
-</style>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const messagesBox = document.querySelector('.messages-box');   // один слушатель
+
+    messagesBox.addEventListener('click', (e) => {
+        const btn = e.target.closest('.download-pdf');
+        if (!btn) return;                           // кликнули не по кнопке
+
+        const id = btn.dataset.id;                  // берём data-id
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        /* опции вывода — можете править под себя */
+        const opt = {
+            margin:       [5, 10, 5, 10],           // [top, right, bottom, left] мм
+            filename:     'JangyrAI-response.pdf',
+            image:        { type: 'jpeg', quality: 0.96 },
+            html2canvas:  { scale: 1.7, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        html2pdf().set(opt).from(el).save();
+    });
+});
+</script>
 
 <!-- <script>
     const messagesList = document.querySelector('.messages-list');

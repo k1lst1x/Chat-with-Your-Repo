@@ -30,6 +30,8 @@ OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
 
 CHROMA_DB_DIR = os.path.join(settings.BASE_DIR, "chroma_db")
 
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
 def index_repository_for_rag(repo_path, repo_name, user_id):
     documents = []
     for root, _, files in os.walk(repo_path):
@@ -414,7 +416,7 @@ def chatbot(request):
 
         return JsonResponse({'message': message, 'response': response_text})
 
-    return render(request, 'home.html', {'chats': chats})
+    return render(request, 'home.html', {'chats': chats, 'github_token': GITHUB_TOKEN})
 
 def index(request):
     return render(request, 'index.html')
