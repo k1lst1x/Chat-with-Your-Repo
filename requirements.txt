@@ -115,7 +115,6 @@ python-multipart==0.0.20
 python-socks==2.7.1
 pythonnet==3.0.5
 pywebview==5.4
-pywin32==309
 PyYAML==6.0.2
 regex==2024.11.6
 requests==2.32.3
