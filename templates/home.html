@@ -148,6 +148,9 @@
             background-color: rgba(255, 255, 255, 0.15);
         }
     }
+    .chat-intro-content {
+        transition: all 0.3s ease;
+    }
 </style>
 {% endblock %}
 
@@ -156,47 +159,53 @@
     <div class="chat-box">
         <!-- ░░░ ШАПКА ░░░ -->
         <div class="chat-intro">
-            <div class="container px-0 px-md-3">
-            <div class="row align-items-center gy-3">
-                <!-- Лого + слоган -->
-                <div class="col-lg-4 text-lg-start text-center">
-                <h5 class="fw-bold mb-1">
-                    <i class="bi bi-stars me-2"></i> CodeAnalyst AI
-                </h5>
-                <p class="mb-0 small">
-                    Интеллектуальный разбор GitHub‑репозиториев <br class="d-none d-lg-block">
-                    и ответы на ваши технические вопросы
-                </p>
+            <button id="toggle-intro" class="btn btn-outline-light btn-sm mb-3">
+                Скрыть инструкции
+            </button>
+            
+            <div class="chat-intro-content">
+                <div class="container px-0 px-md-3">
+                    <div class="row align-items-center gy-3">
+                        <!-- Лого + слоган -->
+                        <div class="col-lg-4 text-lg-start text-center">
+                            <h5 class="fw-bold mb-1">
+                                <i class="bi bi-stars me-2"></i> CodeAnalyst AI
+                            </h5>
+                            <p class="mb-0 small">
+                                Интеллектуальный разбор GitHub‑репозиториев <br class="d-none d-lg-block">
+                                и ответы на ваши технические вопросы
+                            </p>
+                        </div>
+                
+                        <!-- Шаги использования -->
+                        <div class="col-lg-8">
+                            <div class="card bg-white bg-opacity-10 border-0 shadow-sm">
+                                <div class="card-body py-3 px-4">
+                                    <div class="d-flex align-items-start mb-2">
+                                        <span class="badge bg-light text-dark me-3 fw-semibold">1</span>
+                                        <span class="text-white"><i class="bi bi-link-45deg me-1"></i>Вставьте ссылку на публичный репозиторий GitHub.</span>
+                                    </div>
+                                    <div class="d-flex align-items-start mb-2">
+                                        <span class="badge bg-light text-dark me-3 fw-semibold">2</span>
+                                        <span class="text-white"><i class="bi bi-download me-1"></i>Мы скачаем&nbsp;код, построим векторную базу и пришлём <em>«💡Анализ репозитория…»</em>.</span>
+                                    </div>
+                                    <div class="d-flex align-items-start mb-2">
+                                        <span class="badge bg-light text-dark me-3 fw-semibold">3</span>
+                                        <span class="text-white">
+                                        Спросите: 
+                                        <code>Вопрос&nbsp;по&nbsp;репо: <kbd>имя_репо</kbd>: ваш вопрос</code> —
+                                        бот найдёт нужные файлы и ответит.
+                                        </span>
+                                    </div>
+                                    <div class="d-flex align-items-start">
+                                        <span class="badge bg-light text-dark me-3 fw-semibold">4</span>
+                                        <span class="text-white"><i class="bi bi-lightning-charge-fill me-1"></i>Для любых других задач просто напишите сообщение&nbsp;— CodeAnalyst поможет.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-        
-                <!-- Шаги использования -->
-                <div class="col-lg-8">
-                <div class="card bg-white bg-opacity-10 border-0 shadow-sm">
-                    <div class="card-body py-3 px-4">
-                    <div class="d-flex align-items-start mb-2">
-                        <span class="badge bg-light text-dark me-3 fw-semibold">1</span>
-                        <span class="text-white"><i class="bi bi-link-45deg me-1"></i>Вставьте ссылку на публичный репозиторий GitHub.</span>
-                    </div>
-                    <div class="d-flex align-items-start mb-2">
-                        <span class="badge bg-light text-dark me-3 fw-semibold">2</span>
-                        <span class="text-white"><i class="bi bi-download me-1"></i>Мы скачаем&nbsp;код, построим векторную базу и пришлём <em>«💡Анализ репозитория…»</em>.</span>
-                    </div>
-                    <div class="d-flex align-items-start mb-2">
-                        <span class="badge bg-light text-dark me-3 fw-semibold">3</span>
-                        <span class="text-white">
-                        Спросите: 
-                        <code>Вопрос&nbsp;по&nbsp;репо: <kbd>имя_репо</kbd>: ваш вопрос</code> —
-                        бот найдёт нужные файлы и ответит.
-                        </span>
-                    </div>
-                    <div class="d-flex align-items-start">
-                        <span class="badge bg-light text-dark me-3 fw-semibold">4</span>
-                        <span class="text-white"><i class="bi bi-lightning-charge-fill me-1"></i>Для любых других задач просто напишите сообщение&nbsp;— CodeAnalyst поможет.</span>
-                    </div>
-                    </div>
-                </div>
-                </div>
-            </div>
             </div>
         </div>
 
@@ -473,6 +482,19 @@ document.addEventListener('DOMContentLoaded', () => {
     recog.addEventListener('error', (e) => {
         console.warn('SpeechRecognition error:', e.error);
         recog.stop();
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('toggle-intro');
+    const introContent = document.querySelector('.chat-intro-content');
+
+    toggleBtn.addEventListener('click', () => {
+        const isHidden = introContent.style.display === 'none';
+        introContent.style.display = isHidden ? '' : 'none';
+        toggleBtn.textContent = isHidden ? 'Скрыть инструкции' : 'Показать инструкции';
     });
 });
 </script>
